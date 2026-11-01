@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, useWindowDimensions } from 'react-native';
 import type { Timeline, Clip } from '../timeline-engine';
 import { removeClip } from '../timeline-engine';
 import { useConfig } from './theme';
 import { Header, IconButton, fmtClock } from './components';
 import { TimelinePreviewScreen } from './TimelinePreviewScreen';
 import { ClipPreviewScreen } from './ClipPreviewScreen';
+const { getPreviewFrame } = require('./previewLayout');
 
 interface Props {
   timeline: Timeline;
@@ -19,6 +20,8 @@ interface Props {
 
 export function StudioScreen(p: Props) {
   const { theme: t } = useConfig();
+  const { width, height } = useWindowDimensions();
+  const previewFrame = getPreviewFrame(width - t.spacing * 2, height);
   const [prevAll, setPrevAll] = useState(false);
   const [prevOne, setPrevOne] = useState<Clip | undefined>();
 
@@ -32,7 +35,7 @@ export function StudioScreen(p: Props) {
         subtitle={`${p.timeline.clips.length} clips · ${fmtClock(p.timeline.clips.reduce((n, c) => n + c.durationMs, 0))}`}
         right={<IconButton name="arrow-undo" label="Undo" onPress={p.onUndo} />}
       />
-      <Pressable onPress={() => setPrevAll(true)} style={{ height: 205, borderRadius: t.radius, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center' }}>
+      <Pressable onPress={() => setPrevAll(true)} style={{ width: previewFrame.width, height: previewFrame.height, alignSelf: 'center', borderRadius: t.radius, backgroundColor: t.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <Text style={{ color: t.textMuted }}>Preview full timeline</Text>
         <Text style={{ color: t.text, fontSize: 28, marginTop: 8 }}>PLAY</Text>
       </Pressable>

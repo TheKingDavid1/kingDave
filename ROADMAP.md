@@ -5,6 +5,7 @@ Every phase ends with: typecheck green, full workflow-chain test in CI (install 
 ## Phase 1 — Editor core (capcut-style, android)
 - [x] Preview fix: single-clip player screen with timestamps + play/pause
 - [x] Full-timeline preview: clips play back-to-back, tap a block to jump
+- [x] Responsive 16:9 studio preview and square-width import thumbnails
 - [ ] CapCut-style timeline strip: proportional clip blocks, timestamps, playhead, drag handles (in/out trim)
 - [ ] Clip actions: split at playhead, reorder drag, mute/volume per clip, delete
 - [ ] Text/title overlays on timeline track
