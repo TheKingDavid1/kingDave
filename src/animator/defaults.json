@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "idle": { "amplitude": 0.012, "periodMs": 2400 },
+  "blink": { "minGapMs": 2000, "maxGapMs": 5000, "closeMs": 120 },
+  "mouthThresholds": [0.08, 0.25, 0.55]
+}

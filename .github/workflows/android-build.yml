@@ -1,0 +1,71 @@
+name: Android release build
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npm install
+      - name: Configure signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: bash scripts/configure-android-signing.sh
+      - run: npx expo prebuild --platform android --no-install
+      - name: Configure arm64-only ABI, signing and uncompressed native libraries
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          gradle=Path('android/app/build.gradle')
+          text=gradle.read_text()
+          if 'ndk { abiFilters' not in text:
+              text=text.replace('android {','android {\n    ndk { abiFilters "arm64-v8a" }\n    packaging { jniLibs { useLegacyPackaging = false } }',1)
+          if 'signingConfigs {' not in text:
+              signing='''
+              signingConfigs {
+                  release {
+                      def propsFile = rootProject.file("keystore.properties")
+                      if (propsFile.exists()) {
+                          def props = new Properties()
+                          props.load(new FileInputStream(propsFile))
+                          storeFile file(props["storeFile"])
+                          storePassword props["storePassword"]
+                          keyAlias props["keyAlias"]
+                          keyPassword props["keyPassword"]
+                      }
+                  }
+              }
+              '''
+              text=text.replace('android {','android {'+signing,1)
+          if 'signingConfig signingConfigs.release' not in text:
+              text=text.replace('buildTypes {','buildTypes {\n        release { signingConfig signingConfigs.release }',1)
+          gradle.write_text(text)
+          props=Path('android/gradle.properties')
+          prior=props.read_text() if props.exists() else ''
+          props.write_text(prior+'\nreactNativeArchitectures=arm64-v8a\n')
+          PY
+      - name: Build signed release APK
+        working-directory: android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
+      - name: Verify 16 KB zip alignment and APK signature
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          $ANDROID_HOME/build-tools/35.0.0/zipalign -c -P 16 -v 4 "$APK"
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose "$APK"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: da-ve-video-editor-arm64-release
+          path: android/app/build/outputs/apk/release/app-release.apk

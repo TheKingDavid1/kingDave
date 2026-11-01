@@ -1,0 +1,3 @@
+import {initWhisper,WhisperContext} from 'whisper.rn';
+export interface CaptionSegment{id:string;text:string;startMs:number;endMs:number;}
+export class CaptionService{private ctx?:WhisperContext;async load(modelPath:string){this.ctx=await initWhisper({filePath:modelPath});}async transcribe(audioUri:string):Promise<CaptionSegment[]>{if(!this.ctx)throw new Error('Load a Whisper model before transcription');const result=await this.ctx.transcribe(audioUri,{language:'auto'});return (result.segments??[]).map((s:any,i:number)=>({id:`seg_${i}`,text:String(s.text??'').trim(),startMs:Math.round((s.t0??0)*10),endMs:Math.round((s.t1??0)*10)}));}async release(){await this.ctx?.release();this.ctx=undefined;}}

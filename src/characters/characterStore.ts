@@ -1,0 +1,2 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';import type{Character}from'./types';
+const KEY='dave.characters.v1';export async function listCharacters():Promise<Character[]>{return JSON.parse((await AsyncStorage.getItem(KEY))||'[]');}export async function saveCharacter(c:Character){await AsyncStorage.setItem(KEY,JSON.stringify([c,...(await listCharacters()).filter(x=>x.id!==c.id)]));}export async function deleteCharacter(id:string){await AsyncStorage.setItem(KEY,JSON.stringify((await listCharacters()).filter(x=>x.id!==id)));}

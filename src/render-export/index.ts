@@ -1,0 +1,8 @@
+import {FFmpegKit,ReturnCode} from 'ffmpeg-kit-react-native';
+import * as FileSystem from 'expo-file-system';
+import type{Timeline,Clip}from'../timeline-engine';
+export interface ExportProgress{status:'queued'|'running'|'done'|'cancelled'|'error';progress:number;errorMessage?:string;outputUri?:string;}
+export interface ExportEngine{export(t:Timeline,o:{resolution:'720p'|'1080p';encoder?:string},cb:(p:ExportProgress)=>void):Promise<void>;}
+function quote(s:string){return `'${s.replace(/'/g,"'\''")}'`;}
+export const ffmpegExportEngine:ExportEngine={async export(t,o,cb){if(!t.clips.length)throw new Error('Timeline has no clips');const width=o.resolution==='720p'?720:1080,height=o.resolution==='720p'?1280:1920;const output=`${FileSystem.cacheDirectory}export-${t.id}-${Date.now()}.mp4`;const inputs=t.clips.map(c=>`-i ${quote(c.uri)}`).join(' ');const filters=t.clips.map((_,i)=>`[${i}:v]scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2,setsar=1[v${i}]`).join(';');const filter=`${filters};${t.clips.map((_,i)=>`[v${i}]`).join('')}concat=n=${t.clips.length}:v=1:a=0[outv]`;const cmd=`-y ${inputs} -filter_complex ${quote(filter)} -map [outv] -an -c:v libx264 -pix_fmt yuv420p -movflags +faststart ${quote(output)}`;cb({status:'running',progress:0});const session=await FFmpegKit.execute(cmd);const rc=await session.getReturnCode();if(!ReturnCode.isSuccess(rc))throw new Error(`ffmpeg export failed (${rc})`);cb({status:'done',progress:1,outputUri:output});}};
+export async function resolveExportEngine():Promise<ExportEngine>{return ffmpegExportEngine;}

@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "da-ve-video-editor",
+    "slug": "da-ve-video-editor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "davevideo",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.firstkingdavid.davevideoeditor",
+      "versionCode": 1,
+      "permissions": [
+        "READ_MEDIA_VIDEO",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_AUDIO"
+      ],
+      "config": {
+        "usesCleartextTraffic": false
+      }
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "plugins": [
+      "expo-dev-client",
+      "expo-media-library",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24,
+            "buildArchs": [
+              "arm64-v8a"
+            ],
+            "enableProguardInReleaseBuilds": true
+          }
+        }
+      ]
+    ]
+  }
+}

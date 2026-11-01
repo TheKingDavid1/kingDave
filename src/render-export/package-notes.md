@@ -1,0 +1,1 @@
+FFmpegKit React Native is wired as a local native module. Confirm the selected package artifact is available for the target Android toolchain and licensing before release. Android page alignment is configured in Gradle CI, and must be validated on the produced APK.
