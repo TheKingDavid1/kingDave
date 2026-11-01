@@ -24,39 +24,8 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: bash scripts/configure-android-signing.sh
-      - run: npx expo prebuild --platform android --no-install
-      - name: Configure arm64-only ABI, signing and uncompressed native libraries
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          gradle=Path('android/app/build.gradle')
-          text=gradle.read_text()
-          if 'ndk { abiFilters' not in text:
-              text=text.replace('android {','android {\n    ndk { abiFilters "arm64-v8a" }\n    packaging { jniLibs { useLegacyPackaging = false } }',1)
-          if 'signingConfigs {' not in text:
-              signing='''
-              signingConfigs {
-                  release {
-                      def propsFile = rootProject.file("keystore.properties")
-                      if (propsFile.exists()) {
-                          def props = new Properties()
-                          props.load(new FileInputStream(propsFile))
-                          storeFile file(props["storeFile"])
-                          storePassword props["storePassword"]
-                          keyAlias props["keyAlias"]
-                          keyPassword props["keyPassword"]
-                      }
-                  }
-              }
-              '''
-              text=text.replace('android {','android {'+signing,1)
-          if 'signingConfig signingConfigs.release' not in text:
-              text=text.replace('buildTypes {','buildTypes {\n        release { signingConfig signingConfigs.release }',1)
-          gradle.write_text(text)
-          props=Path('android/gradle.properties')
-          prior=props.read_text() if props.exists() else ''
-          props.write_text(prior+'\nreactNativeArchitectures=arm64-v8a\n')
-          PY
+      - name: Verify prebuilt android project
+        run: test -x android/gradlew
       - name: Build signed release APK
         working-directory: android
         run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
