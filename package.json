@@ -29,6 +29,7 @@
     "react": "19.0.0",
     "react-native": "0.79.6",
     "react-native-safe-area-context": "5.4.0",
+    "react-native-video": "^6.19.3",
     "react-native-video-trim": "^8.2.4",
     "whisper.rn": "0.5.4"
   },
