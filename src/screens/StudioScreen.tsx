@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, useWindowDimensions } from 'react-native';
 import type { Timeline, Clip } from '../timeline-engine';
-import { removeClip } from '../timeline-engine';
+import { removeClip, reorderClips, setClipVolume } from '../timeline-engine';
 import { useConfig } from './theme';
 import { Header, IconButton, fmtClock } from './components';
 import { TimelinePreviewScreen } from './TimelinePreviewScreen';
@@ -50,6 +50,10 @@ export function StudioScreen(p: Props) {
           <View key={c.id} style={{ backgroundColor: t.surface, borderRadius: 12, padding: 12, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Text style={{ color: t.primary, fontWeight: '700' }}>{i + 1}</Text>
             <Text numberOfLines={1} style={{ color: t.text, flex: 1 }}>{c.label} · {fmtClock(c.durationMs)}</Text>
+            <IconButton name="chevron-up" label="Move clip earlier" disabled={i === 0} onPress={() => p.onCommit(x => reorderClips(x, i, i - 1))} />
+            <IconButton name="chevron-down" label="Move clip later" disabled={i === p.timeline.clips.length - 1} onPress={() => p.onCommit(x => reorderClips(x, i, i + 1))} />
+            <IconButton name="volume-low" label={`Lower volume, ${Math.round(c.volume * 100)} percent`} onPress={() => p.onCommit(x => setClipVolume(x, c.id, c.volume - 0.1))} />
+            <IconButton name="volume-high" label={`Raise volume, ${Math.round(c.volume * 100)} percent`} onPress={() => p.onCommit(x => setClipVolume(x, c.id, c.volume + 0.1))} />
             <IconButton name="play" label="Preview" onPress={() => setPrevOne(c)} />
             <IconButton name="text-outline" label="Captions" onPress={() => p.onOpenCaptions(c)} />
             <IconButton name="trash-outline" label="Remove clip" onPress={() => p.onCommit(x => removeClip(x, c.id))} />

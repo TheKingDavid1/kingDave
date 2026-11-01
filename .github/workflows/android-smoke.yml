@@ -30,6 +30,11 @@ jobs:
           npx expo export --platform android
       - name: Generate native Android project
         run: npx expo prebuild --platform android --no-install
+      - name: Ensure debug signing key exists
+        run: |
+          if [ ! -f android/app/debug.keystore ]; then
+            keytool -genkeypair -v -keystore android/app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
       - name: Install app and open Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
