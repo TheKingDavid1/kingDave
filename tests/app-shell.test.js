@@ -18,26 +18,39 @@ test('launch restores projects without preventing the Projects screen from rende
   assert.match(screen, /<ProjectsScreen[\s\S]*onNewVideo=\{newVideo\}/);
 });
 
-test('new video enters Studio, then video import reaches the selected clip in the timeline', () => {
+test('launch to Studio to gallery import hands the selected media through to project preview', () => {
   const screen = read('src/screens/TimelineScreen.tsx');
+  const importer = read('src/screens/ImportSheet.tsx');
+  const studio = read('src/screens/StudioScreen.tsx');
+  const player = read('src/screens/TimelinePreviewScreen.tsx');
   assert.match(screen, /function newVideo\(\)[\s\S]*setTab\('studio'\)/);
   assert.match(screen, /getMediaPermission\(\)[\s\S]*requestMediaPermission\(\)[\s\S]*getAssetsAsync\(\{ mediaType: 'video'/);
+  assert.match(importer, /onPress=\{\(\) => p\.onPick\(item\)\}/);
   assert.match(screen, /makeClip\(\{ uri: a\.uri, durationMs: a\.duration \* 1000, label: a\.filename \}\)/);
   assert.match(screen, /addClips\(t2, \[clip\]\)/);
-  assert.match(screen, /<ImportSheet visible=\{!!picker\}/);
+  assert.match(studio, /setPrevAll\(true\)/);
+  assert.match(player, /<Video[\s\S]*source=\{\{ uri: current\.uri \}\}[\s\S]*onEnd=\{\(\) => \{/);
 });
 
-test('Studio enters real single-clip and full-timeline players, with export smoke path', () => {
-  const studio = read('src/screens/StudioScreen.tsx');
+test('AI agent actions apply to the same timeline and autosave persists edits before export', () => {
   const screen = read('src/screens/TimelineScreen.tsx');
-  const clipPlayer = read('src/screens/ClipPreviewScreen.tsx');
-  const timelinePlayer = read('src/screens/TimelinePreviewScreen.tsx');
-  const exporter = read('src/render-export/index.ts');
-  assert.match(studio, /setPrevAll\(true\)/);
-  assert.match(studio, /setPrevOne\(c\)/);
-  assert.match(clipPlayer, /<Video[\s\S]*source=\{\{ uri: clip\.uri \}\}[\s\S]*paused=\{!playing\}/);
-  assert.match(timelinePlayer, /<Video[\s\S]*source=\{\{ uri: current\.uri \}\}[\s\S]*onEnd=\{\(\) => \{/);
+  const agent = read('src/screens/AgentScreen.tsx');
+  const actions = read('src/agent-orchestrator/actions.ts');
+  const autosave = read('src/project/useAutosave.ts');
+  assert.match(screen, /<AgentScreen timeline=\{timeline\} onCommit=\{commit\}/);
+  assert.match(agent, /applyActions\(p\.timeline,actions\)/);
+  assert.match(agent, /p\.onCommit\(\(\)=>r\.timeline\)/);
+  assert.match(actions, /case'trim_clip'/);
+  assert.match(autosave, /saveProject/);
   assert.match(screen, /await engine\.export\(timeline, \{ resolution: res, encoder: 'hardware-h264' \}, setExp\)/);
+});
+
+test('export prepares Android content URIs and exposes explicit export error states', () => {
+  const exporter = read('src/render-export/index.ts');
+  const screen = read('src/screens/TimelineScreen.tsx');
+  assert.match(exporter, /uri\.startsWith\('content:\/\/'\)/);
+  assert.match(exporter, /copyAsync\(\{ from: uri, to: target \}\)/);
   assert.match(exporter, /await merge\(urls, \{ outputExt: 'mp4' \}\)/);
-  assert.match(exporter, /await compress\(toLocalPath\(merged\.outputPath\)/);
+  assert.match(exporter, /await compress\(mergedPath/);
+  assert.match(screen, /setExp\(\{ status: 'error', progress: 0, errorMessage:/);
 });

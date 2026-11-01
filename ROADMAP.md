@@ -1,50 +1,44 @@
-# da-ve-video-editor — build roadmap
+# da-ve-video-editor build roadmap
 
-Every phase ends with: typecheck green, full workflow-chain test in CI (install → build → artifact), and an Android emulator smoke pass before any APK is sent or a runtime milestone is checked off.
+Every core phase requires typecheck, workflow-chain tests, Android bundle, and a real Android emulator/device smoke test before its runtime milestone is checked off or an APK is sent. Current source is remote main 14d66c8 at time of inspection. No Android emulator/device is available in this workspace, so device runtime remains pending.
 
-## Phase 1 — Editor core (capcut-style, android)
-- [x] Preview fix: single-clip player screen with timestamps + play/pause; load event now fills the duration display
-- [x] Full-timeline preview: clips play back-to-back, tap a block to jump
-- [x] Responsive 16:9 studio preview and square-width import thumbnails
-- [ ] CapCut-style timeline strip: proportional clip blocks, timestamps, playhead, drag handles (in/out trim)
-- [ ] Clip actions: split at playhead, reorder drag, mute/volume per clip, delete
-- [ ] Text/title overlays on timeline track
-- [ ] Audio track: per-clip volume + background music import, mixed at export
-- [ ] Export pipeline v2: merge → compress → save to gallery, with progress UI
+Product constraints: core editing and story creation must remain free to use. Do not add paid APIs or cloud services that incur charges. Use local processing and free tiers where available, and disclose quotas/rate limits. Monetization is optional future revenue, never a dependency for core features.
 
-## Phase 2 — AI brain (reliable, free, multi-key)
-- [x] Gemini 2.0-flash planner on current v1beta endpoint (404 fixed)
-- [x] Multi-key rotation (round-robin) for Gemini + Groq fallback so rate limits never block
-- [x] Keys stored encrypted-at-rest in app storage, never plain text in code
-- [ ] Cloudflare Worker key proxy (free tier) so the APK carries no key at all
-- [ ] Agent actions expanded: split, reorder, volume, music, text overlay — everything the editor can do
-- [ ] Offline queue: agent requests retry with backoff, no silent failures
+## Phase 1: startup, Studio, import, preview, agent, export
+- [x] Root ConfigContext provider mounted around app screen tree, fixing root provider mismatch.
+- [x] Studio video picker, timeline preview, clip preview navigation and timestamps.
+- [x] Android launch/import/preview/export source-chain tests (static integration assertions only, not device runtime).
+- [x] Android content:// media URI copy-to-cache normalization before native export.
+- [ ] Gallery selection and preview playback on a real Android device, including Redmi 15 Android 16.
+- [ ] AI planner request, review, apply, autosave/reopen, export and playback verified end-to-end.
+- [ ] Export merge/compress/save-to-gallery verified on Android. Current exporter merges and compresses; gallery saving is not implemented.
+- [ ] Runtime milestone and APK gate, blocked until actual Android runtime/device testing.
 
-## Phase 3 — Story pipeline (Calliope-style YouTube automation)
-- [ ] Script intake: paste prompt/script → agent produces story board (scenes, narration, duration)
-- [ ] Per-scene image prompts auto-generated from the storyboard (consistent characters/style)
-- [ ] Scene-by-scene approval flow: agent presents a scene, user animates/approves, agent locks it, moves on
-- [ ] Locked brand voices: 2–3 pinned TTS voices (Edge-TTS free tier), voice per character persisted
-- [ ] Lip-sync + drawing animation for selected scenes (the v2 animator), kept offline
-- [ ] Background music picker: bundled CC0 tracks, auto ducking under narration
-- [ ] One-tap assembly: approved scenes + voices + music + captions → timeline → export (quality-first, long-form)
+## Phase 2: CapCut-inspired editor
+- [ ] Proportional timeline strips, seek/playhead and trim handles.
+- [ ] Split, reorder, volume, delete, overlays and background music.
+- [ ] Export mixed timeline and save output to gallery.
+- [ ] Full functional chain tests and Android device runtime pass.
 
-## Phase 4 — Monetization
-- [ ] Free tier: watermark on exports, all core tools usable
-- [ ] Premium unlock (one-time): no watermark, extra voices, longer exports
-- [ ] AdMob ads on free tier (rewarded ad = temporary premium feature use)
-- [ ] Play Billing wiring + receipt check
+## Phase 3: Calliope-inspired creation pipeline, separate from editor UI
+- [ ] Script/prompt intake to structured storyboard and narration.
+- [ ] Per-scene image prompts and consistent character/style controls.
+- [ ] Scene-by-scene review, approval and locking before animation.
+- [ ] Fixed channel voices, local/free TTS options and explicit free-tier quotas.
+- [ ] Lip sync/drawing animation and music with local/free tools.
+- [ ] Assemble approved scenes, audio and captions into editor timeline, then export.
+- [ ] End-to-end chain tests and Android device runtime pass.
 
-## Phase 5 — Reliability
-- [ ] CI test chain: typecheck → build → 16kb alignment verify → artifact on every push
-- [ ] Crash reporting (free tier, e.g. Sentry) so bugs surface on their own
-- [ ] Release checklist: version bump, signed APK, zip backup to Drive, changelog
+## Phase 4: reliability and optional monetization
+- [ ] No exposed hardcoded provider keys; user-provided keys securely stored locally or free proxy only if it incurs no charge.
+- [ ] CI typecheck, tests, Android bundle, native build, 16 KB alignment verification and artifacts.
+- [ ] Runtime crash tracing across supported Android profiles.
+- [ ] Optional monetization only after the core remains fully usable for free.
 
-## Handoff notes (read me first, future builder)
-- Restore cause found in source: `TimelineScreen` called `useConfig()`, but root `App` did not mount `ConfigContext.Provider`, so screen components consumed the fallback `createContext<UiConfig>({theme: ...})` shape and attempted to read `theme` from a config-shaped object. Root now provides `DEFAULT_CONFIG` to the full screen tree.
-- What this is: Android AI video editor, expo sdk 53 / RN 0.79.6, arm64-v8a-only release APK via GitHub Actions.
-- Repo: github.com/TheKingDavid1/kingDave (branch main). CI: .github/workflows/android-build.yml, signing via repo secrets (ANDROID_KEYSTORE_*). Keystore lives with folk/Shafiu, passwords in secrets.
-- Brain: src/agent-orchestrator — Gemini 2.0-flash on v1beta, multi-key round-robin + Groq fallback, keys in AsyncStorage (encrypted adapter stub). Do NOT call deprecated model paths, that caused the old 404s.
-- Export: react-native-video-trim (merge+compress). NEVER reintroduce com.arthenica ffmpeg-kit, it was retired and deleted from maven, that's what kept breaking old builds.
-- 16kb page alignment is verified in CI after build. Do not remove.
-- Phase status lives in the checkboxes above; each phase ships as a tested APK before the next starts.
+## Verified in this workspace
+- Audited checkout: remote main at 14d66c85c599b5e099945d34062fe98c031948ea. Working tree has pre-existing edits; no commit or push made.
+- `npm test`: 8/8 pass. These are source/layout assertions, including a static check of launch/import/preview wiring, agent action application and autosave wiring, and export URI/error handling. They do not run the React Native UI or invoke native media/AI services.
+- `npm run typecheck`: passes after the current exporter changes. The Expo FileSystem import resolves from `expo-file-system`; paths are awaited before merge/compress.
+- `npx expo export --platform android`: succeeds, Metro bundles 714 modules and writes the Android bundle.
+- Native build blocked: `./android/gradlew -p android assembleDebug` cannot run because Java/JAVA_HOME is unavailable. `adb` and `emulator` are also absent. No Android install, UI chain, native export, or device runtime was tested; no APK produced or claimed tested.
+- Next gate: provide an Android SDK/emulator runner with JDK, then build/install and exercise the full launch → Studio → import → preview → agent plan/review/apply → export/playback flow, including permission, planner, and export failure UI. Keep these runtime checkboxes open until observed.

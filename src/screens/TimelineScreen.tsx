@@ -123,9 +123,9 @@ export function TimelineScreen({ config, onOpenCaptions: _unused }: { config: Ui
     setResolution(res);
     if (timeline.clips.length === 0) return Alert.alert('Nothing to export', 'Add at least one clip.');
     setTab('projects');
-    const engine = await resolveExportEngine();
     try {
       setExp({ status: 'running', progress: 0 });
+      const engine = await resolveExportEngine();
       await engine.export(timeline, { resolution: res, encoder: 'hardware-h264' }, setExp);
     } catch (e) {
       setExp({ status: 'error', progress: 0, errorMessage: (e as Error).message });
