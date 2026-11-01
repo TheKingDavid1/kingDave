@@ -1,9 +1,9 @@
 # da-ve-video-editor — build roadmap
 
-Every phase ends with: typecheck green, full workflow-chain test in CI (install → build → artifact), and a smoke-test APK sent to Shafiu before the box gets checked.
+Every phase ends with: typecheck green, full workflow-chain test in CI (install → build → artifact), and an Android emulator smoke pass before any APK is sent or a runtime milestone is checked off.
 
 ## Phase 1 — Editor core (capcut-style, android)
-- [x] Preview fix: single-clip player screen with timestamps + play/pause
+- [x] Preview fix: single-clip player screen with timestamps + play/pause; load event now fills the duration display
 - [x] Full-timeline preview: clips play back-to-back, tap a block to jump
 - [x] Responsive 16:9 studio preview and square-width import thumbnails
 - [ ] CapCut-style timeline strip: proportional clip blocks, timestamps, playhead, drag handles (in/out trim)
@@ -41,6 +41,7 @@ Every phase ends with: typecheck green, full workflow-chain test in CI (install 
 - [ ] Release checklist: version bump, signed APK, zip backup to Drive, changelog
 
 ## Handoff notes (read me first, future builder)
+- Restore cause found in source: `TimelineScreen` called `useConfig()`, but root `App` did not mount `ConfigContext.Provider`, so screen components consumed the fallback `createContext<UiConfig>({theme: ...})` shape and attempted to read `theme` from a config-shaped object. Root now provides `DEFAULT_CONFIG` to the full screen tree.
 - What this is: Android AI video editor, expo sdk 53 / RN 0.79.6, arm64-v8a-only release APK via GitHub Actions.
 - Repo: github.com/TheKingDavid1/kingDave (branch main). CI: .github/workflows/android-build.yml, signing via repo secrets (ANDROID_KEYSTORE_*). Keystore lives with folk/Shafiu, passwords in secrets.
 - Brain: src/agent-orchestrator — Gemini 2.0-flash on v1beta, multi-key round-robin + Groq fallback, keys in AsyncStorage (encrypted adapter stub). Do NOT call deprecated model paths, that caused the old 404s.

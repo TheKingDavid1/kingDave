@@ -36,6 +36,7 @@ export function ClipPreviewScreen({ clip, onBack }: Props) {
         resizeMode="contain"
         paused={!playing}
         onProgress={(e: { currentTime: number }) => setPos(e.currentTime * 1000)}
+        onLoad={(e) => setDur(e.duration * 1000)}
         onEnd={() => setPlaying(false)}
       />
       <View style={st.controls}>

@@ -9,7 +9,8 @@
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
     "prebuild": "expo prebuild",
-    "test": "node --test"
+    "test": "node --test",
+    "test:android-smoke": "node --test tests/app-shell.test.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
