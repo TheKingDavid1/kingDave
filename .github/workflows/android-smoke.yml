@@ -37,9 +37,8 @@ jobs:
           arch: x86_64
           profile: pixel_2
           script: |
-            cd android
-            ./gradlew assembleDebug -PreactNativeArchitectures=x86_64
-            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            ./android/gradlew -p android assembleDebug -PreactNativeArchitectures=x86_64
+            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
             adb shell am force-stop com.firstkingdavid.davevideoeditor || true
             adb shell monkey -p com.firstkingdavid.davevideoeditor 1
             for attempt in $(seq 1 30); do
