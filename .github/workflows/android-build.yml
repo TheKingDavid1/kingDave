@@ -2,7 +2,7 @@ name: Android release build
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, 'phase2-reconcile-volume-controls']
 jobs:
   build:
     runs-on: ubuntu-latest

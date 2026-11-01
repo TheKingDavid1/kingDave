@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, 'phase2-reconcile-volume-controls']
 jobs:
   android-emulator-smoke:
     runs-on: ubuntu-latest
